@@ -1,0 +1,7 @@
+*.cjo
+*.errlog
+*.outlog
+*.dep-cache
+*.cjpm-history
+*.bin-cache
+target
