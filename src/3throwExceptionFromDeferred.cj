@@ -24,7 +24,6 @@ func main3() {
             33
         } handle (_: Immediate3) {
             throw MyException2()
-            43
         }
     } catch(_: MyException2) {
         return 0
