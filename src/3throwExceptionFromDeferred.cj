@@ -6,6 +6,7 @@ package cangjie_test_cases
 // ASSERT: scan-not stack trace
 
 import stdx.effect.*
+// ^ Requires switching many internal things in stdx.effect to public
 
 class Deferred3 <: Command<Unit> {}
 class Immediate3 <: Command<Unit> {}
@@ -14,18 +15,25 @@ class MyException2 <: Exception {}
 
 func main3() {
     try {
-        try {
-            let x = try {
-                perform Immediate3()
-                34
-            } handle (_: Deferred3, res: Resumption<Unit, Int64>) {
-                42
+        let frame2 = DeferredFrame<Int64> {
+            let frame = DeferredFrame<Int64> {
+                HandlerFrame.perf(Immediate3())
+                return 34
             }
+            let handler: HandlerFn<Immediate3, Unit, Int64> = { _: Immediate3, _: ResumptionInternal<Unit, Int64> =>
+                return 42
+            }
+            frame.setDeferredHandler<Immediate3, Unit>(handler) 
             33
-        } handle (_: Immediate3) {
-            throw MyException2()
         }
+        frame2.setImmediateHandler<Immediate3, Unit, Int64> {_: Immediate3 =>
+            //43
+            ImmediateHandlerReturn.Exc(MyException2())
+        }
+        let x: Int64 = frame2.start()
+        0
     } catch(_: MyException2) {
+        println("caught exception successfully")
         return 0
     }
 }
